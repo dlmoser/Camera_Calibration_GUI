@@ -41,6 +41,8 @@ class intrinsic_calibration:
         self.K = np.eye(3, 3)  # Camera matrix
         self.K[0, 2] = 1920 / 2
         self.K[1, 2] = 1080 / 2
+        self.K[0,0]=500
+        self.K[1,1]=500
 
     def find_chessboard_corners(self, gui=None):  # display = cv2/gui
         if self.status < 0:
@@ -306,7 +308,7 @@ class fisheye_calibrater(intrinsic_calibration):
             self.tvecs = [np.zeros((1, 1, 3), dtype=np.float64)
                           for i in range(self.img_len)]  # Output vector of translation vectors
 
-            self.rms, t, w, e, f = cv2.fisheye.calibrate(
+            self.rms, self.K, w, e, f = cv2.fisheye.calibrate(
                 self.objpoints, self.imgpoints,  self.img_shape_flip, self.K, self.D, self.rvecs, self.tvecs, flags=self.selected_calibraiton_flags)
 
             self.Knew = cv2.fisheye.estimateNewCameraMatrixForUndistortRectify(self.K, self.D,  self.img_shape_flip, self.R, balance=self.new_camera_matrix_args['balance'],
@@ -316,7 +318,8 @@ class fisheye_calibrater(intrinsic_calibration):
                 self.K, self.D, self.new_camera_matrix_args['R'], self.Knew, self.new_camera_matrix_args['new_size'], cv2.CV_16SC2)
             self.map1 = self.map1+self.new_camera_matrix_args['new_shift'][1]
             self.map2 = self.map2+self.new_camera_matrix_args['new_shift'][0]
-            #np.save("calibration_params.npy", {"Knew": self.Knew, "K": self.K, "D": self.D, "map1": self.map1, "map2": self.map2})
+            print("Knew", self.Knew, "K", self.K, "D", self.D, "map1", self.map1, "map2", self.map2)
+            np.save("calibration_params.npy", {"Knew": self.Knew, "K": self.K, "D": self.D, "map1": self.map1, "map2": self.map2})
         except Exception as e:
             self.status = -4
             print("Error in calibraiton Matrix: {}".format(e))
